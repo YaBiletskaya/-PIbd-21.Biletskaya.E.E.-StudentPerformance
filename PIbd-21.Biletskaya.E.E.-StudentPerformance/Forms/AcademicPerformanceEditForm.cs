@@ -23,7 +23,6 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         public AcademicPerformance? Performance { get; private set; }
 
-        // ID новой оценки задаётся из AcademicPerformanceForm.
         public int NewId { get; set; }
 
         public AcademicPerformanceEditForm(
@@ -106,8 +105,6 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 var discipline = disciplines.FirstOrDefault(
                     x => x.Id == assignmentDiscipline.DisciplineId);
 
-                // Не добавляем назначение, если отсутствует преподаватель
-                // или дисциплина.
                 if (teacher == null || discipline == null)
                     continue;
 

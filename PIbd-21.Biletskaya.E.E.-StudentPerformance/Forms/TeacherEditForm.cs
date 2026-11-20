@@ -20,7 +20,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
         {
             InitializeComponent();
 
-            comboBoxPosition.DataSource = Enum.GetValues<TeacherPosition>();
+            LoadPositions();
 
             buttonSave.Click += buttonSave_Click;
             buttonCancel.Click += buttonCancel_Click;
@@ -34,7 +34,27 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             textBoxLastName.Text = teacher.LastName;
             textBoxMiddleName.Text = teacher.MiddleName;
             textBoxAcademicDegree.Text = teacher.AcademicDegree;
-            comboBoxPosition.SelectedItem = teacher.Position;
+
+            comboBoxPosition.SelectedValue = teacher.Position;
+        }
+
+        private void LoadPositions()
+        {
+            var positions = new List<PositionItem>
+            {
+                new PositionItem(TeacherPosition.None, "Не указана"),
+                new PositionItem(TeacherPosition.Assistant, "Ассистент"),
+                new PositionItem(TeacherPosition.Lecturer, "Преподаватель"),
+                new PositionItem(TeacherPosition.SeniorLecturer, "Старший преподаватель"),
+                new PositionItem(TeacherPosition.AssociateProfessor, "Доцент"),
+                new PositionItem(TeacherPosition.Professor, "Профессор"),
+                new PositionItem(TeacherPosition.HeadOfDepartment, "Заведующий кафедрой")
+            };
+
+            comboBoxPosition.DataSource = positions;
+            comboBoxPosition.DisplayMember = "Name";
+            comboBoxPosition.ValueMember = "Position";
+            comboBoxPosition.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
         private void buttonSave_Click(object? sender, EventArgs e)
@@ -51,19 +71,19 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 return;
             }
 
-            if (comboBoxPosition.SelectedItem == null)
+            if (comboBoxPosition.SelectedValue == null)
             {
                 MessageBox.Show("Выберите должность преподавателя.");
                 return;
             }
 
-            Teacher = Teacher.CreateEntity(
+            Teacher = Entities.Teacher.CreateEntity(
                 Teacher?.Id ?? 0,
                 textBoxFirstName.Text.Trim(),
                 textBoxLastName.Text.Trim(),
                 textBoxMiddleName.Text.Trim(),
                 textBoxAcademicDegree.Text.Trim(),
-                (TeacherPosition)comboBoxPosition.SelectedItem);
+                (TeacherPosition)comboBoxPosition.SelectedValue);
 
             DialogResult = DialogResult.OK;
             Close();
@@ -73,6 +93,18 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        private class PositionItem
+        {
+            public TeacherPosition Position { get; }
+            public string Name { get; }
+
+            public PositionItem(TeacherPosition position, string name)
+            {
+                Position = position;
+                Name = name;
+            }
         }
     }
 }
