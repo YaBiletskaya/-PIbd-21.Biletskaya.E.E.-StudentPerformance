@@ -36,7 +36,13 @@ public class DepartmentRepository : IDepartmentRepository
 
     public void Update(Department entity)
     {
-        _context.Departments.Update(entity);
+        var existingEntity = _context.Departments
+            .FirstOrDefault(x => x.Id == entity.Id);
+
+        if (existingEntity == null)
+            return;
+
+        _context.Entry(existingEntity).CurrentValues.SetValues(entity);
         _context.SaveChanges();
     }
 

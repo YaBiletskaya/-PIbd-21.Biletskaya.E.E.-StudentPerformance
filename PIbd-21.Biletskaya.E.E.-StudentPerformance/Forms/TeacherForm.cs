@@ -1,4 +1,5 @@
 ﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities.Enums;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
 using System;
 using System.Collections.Generic;
@@ -43,7 +44,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                     teacher.FirstName,
                     teacher.MiddleName,
                     teacher.AcademicDegree,
-                    Position = teacher.Position.ToString()
+                    Position = GetPositionName(teacher.Position)
                 })
                 .ToList();
 
@@ -57,6 +58,21 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                     "Учёная степень";
                 dataGridViewTeachers.Columns["Position"].HeaderText = "Должность";
             }
+        }
+
+        private string GetPositionName(TeacherPosition position)
+        {
+            return position switch
+            {
+                TeacherPosition.None => "Не указана",
+                TeacherPosition.Assistant => "Ассистент",
+                TeacherPosition.Lecturer => "Преподаватель",
+                TeacherPosition.SeniorLecturer => "Старший преподаватель",
+                TeacherPosition.AssociateProfessor => "Доцент",
+                TeacherPosition.Professor => "Профессор",
+                TeacherPosition.HeadOfDepartment => "Заведующий кафедрой",
+                _ => "Неизвестная должность"
+            };
         }
 
         private Teacher? GetSelectedTeacher()

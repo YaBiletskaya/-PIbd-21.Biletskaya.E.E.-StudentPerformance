@@ -36,7 +36,13 @@ public class StudentRepository : IStudentRepository
 
     public void Update(Student entity)
     {
-        _context.Students.Update(entity);
+        var existingEntity = _context.Students
+            .FirstOrDefault(x => x.Id == entity.Id);
+
+        if (existingEntity == null)
+            return;
+
+        _context.Entry(existingEntity).CurrentValues.SetValues(entity);
         _context.SaveChanges();
     }
 

@@ -36,7 +36,13 @@ public class DisciplineRepository : IDisciplineRepository
 
     public void Update(Discipline entity)
     {
-        _context.Disciplines.Update(entity);
+        var existingEntity = _context.Disciplines
+            .FirstOrDefault(x => x.Id == entity.Id);
+
+        if (existingEntity == null)
+            return;
+
+        _context.Entry(existingEntity).CurrentValues.SetValues(entity);
         _context.SaveChanges();
     }
 

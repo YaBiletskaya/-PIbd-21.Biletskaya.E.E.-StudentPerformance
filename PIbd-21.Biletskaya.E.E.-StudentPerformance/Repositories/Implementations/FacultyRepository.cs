@@ -36,7 +36,13 @@ public class FacultyRepository : IFacultyRepository
 
     public void Update(Faculty entity)
     {
-        _context.Faculties.Update(entity);
+        var existingEntity = _context.Faculties
+            .FirstOrDefault(x => x.Id == entity.Id);
+
+        if (existingEntity == null)
+            return;
+
+        _context.Entry(existingEntity).CurrentValues.SetValues(entity);
         _context.SaveChanges();
     }
 

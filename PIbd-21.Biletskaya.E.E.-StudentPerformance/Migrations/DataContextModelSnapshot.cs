@@ -35,7 +35,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("AssessmentDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Grade")
                         .HasColumnType("integer");
@@ -143,7 +143,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("BirthDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<int>("DepartmentId")
                         .HasColumnType("integer");
@@ -220,7 +220,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("AssignmentDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("DepartmentId")
                         .HasColumnType("integer");

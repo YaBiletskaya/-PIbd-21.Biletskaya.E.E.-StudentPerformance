@@ -78,6 +78,7 @@ public class DataContext : DbContext
             entity.Property(x => x.StudentNumber).IsRequired();
             entity.Property(x => x.StreamName).IsRequired();
             entity.Property(x => x.GroupName).IsRequired();
+            entity.Property(x => x.BirthDate).HasColumnType("date");
 
             entity.HasOne<Department>()
                 .WithMany()
@@ -88,6 +89,7 @@ public class DataContext : DbContext
         modelBuilder.Entity<TeachingAssignment>(entity =>
         {
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssignmentDate).HasColumnType("timestamp without time zone");
 
             entity.HasOne<Teacher>()
                 .WithMany()
@@ -120,6 +122,7 @@ public class DataContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.AcademicYear).IsRequired();
             entity.Property(x => x.Options).HasConversion<int>();
+            entity.Property(x => x.AssessmentDate).HasColumnType("timestamp without time zone");
 
             entity.HasOne<Student>()
                 .WithMany()

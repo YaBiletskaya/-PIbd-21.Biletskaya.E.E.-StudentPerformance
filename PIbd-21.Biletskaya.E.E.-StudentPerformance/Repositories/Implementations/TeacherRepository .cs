@@ -36,7 +36,13 @@ public class TeacherRepository : ITeacherRepository
 
     public void Update(Teacher entity)
     {
-        _context.Teachers.Update(entity);
+        var existingEntity = _context.Teachers
+            .FirstOrDefault(x => x.Id == entity.Id);
+
+        if (existingEntity == null)
+            return;
+
+        _context.Entry(existingEntity).CurrentValues.SetValues(entity);
         _context.SaveChanges();
     }
 
