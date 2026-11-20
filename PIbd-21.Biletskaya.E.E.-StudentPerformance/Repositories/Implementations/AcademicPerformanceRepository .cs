@@ -1,4 +1,5 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,28 +10,38 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementation
 
 public class AcademicPerformanceRepository : IAcademicPerformanceRepository
 {
-    private readonly List<AcademicPerformance> _performances = new();
+    private readonly DataContext _context;
+
+    public AcademicPerformanceRepository(DataContext context)
+    {
+        _context = context;
+    }
 
     public IEnumerable<AcademicPerformance> ReadAll()
     {
-        return _performances;
+        return _context.AcademicPerformances.ToList();
     }
 
     public AcademicPerformance? ReadById(int id)
     {
-        return _performances.FirstOrDefault(performance => performance.Id == id);
+        return _context.AcademicPerformances
+            .FirstOrDefault(x => x.Id == id);
     }
 
     public void Create(AcademicPerformance entity)
     {
-        _performances.Add(entity);
+        _context.AcademicPerformances.Add(entity);
+        _context.SaveChanges();
     }
 
     public void Delete(int id)
     {
-        var entity = _performances.FirstOrDefault(x => x.Id == id);
+        var entity = _context.AcademicPerformances.Find(id);
 
-        if (entity != null)
-            _performances.Remove(entity);
+        if (entity == null)
+            return;
+
+        _context.AcademicPerformances.Remove(entity);
+        _context.SaveChanges();
     }
 }

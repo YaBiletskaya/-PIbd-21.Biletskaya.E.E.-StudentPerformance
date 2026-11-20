@@ -1,4 +1,5 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,30 +11,38 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementation
 
 public class TeachingAssignmentRepository : ITeachingAssignmentRepository
 {
-    private readonly List<TeachingAssignment> _assignments = new();
+    private readonly DataContext _context;
+
+    public TeachingAssignmentRepository(DataContext context)
+    {
+        _context = context;
+    }
 
     public IEnumerable<TeachingAssignment> ReadAll()
     {
-        return _assignments;
+        return _context.TeachingAssignments.ToList();
     }
 
     public TeachingAssignment? ReadById(int id)
     {
-        return _assignments.FirstOrDefault(assignment => assignment.Id == id);
+        return _context.TeachingAssignments
+            .FirstOrDefault(x => x.Id == id);
     }
 
     public void Create(TeachingAssignment entity)
     {
-        _assignments.Add(entity);
+        _context.TeachingAssignments.Add(entity);
+        _context.SaveChanges();
     }
 
     public void Delete(int id)
     {
-        var assignment = ReadById(id);
+        var entity = _context.TeachingAssignments.Find(id);
 
-        if (assignment != null)
-        {
-            _assignments.Remove(assignment);
-        }
+        if (entity == null)
+            return;
+
+        _context.TeachingAssignments.Remove(entity);
+        _context.SaveChanges();
     }
 }

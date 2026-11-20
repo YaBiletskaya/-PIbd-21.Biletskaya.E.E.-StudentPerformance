@@ -1,4 +1,5 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,41 +11,43 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementation
 
 public class TeacherRepository : ITeacherRepository
 {
-    private readonly List<Teacher> _teachers = new();
+    private readonly DataContext _context;
+
+    public TeacherRepository(DataContext context)
+    {
+        _context = context;
+    }
 
     public IEnumerable<Teacher> ReadAll()
     {
-        return _teachers;
+        return _context.Teachers.ToList();
     }
 
     public Teacher? ReadById(int id)
     {
-        return _teachers.FirstOrDefault(teacher => teacher.Id == id);
+        return _context.Teachers.FirstOrDefault(x => x.Id == id);
     }
 
     public void Create(Teacher entity)
     {
-        _teachers.Add(entity);
+        _context.Teachers.Add(entity);
+        _context.SaveChanges();
     }
 
     public void Update(Teacher entity)
     {
-        var teacher = ReadById(entity.Id);
-
-        if (teacher != null)
-        {
-            _teachers.Remove(teacher);
-            _teachers.Add(entity);
-        }
+        _context.Teachers.Update(entity);
+        _context.SaveChanges();
     }
 
     public void Delete(int id)
     {
-        var teacher = ReadById(id);
+        var entity = _context.Teachers.Find(id);
 
-        if (teacher != null)
-        {
-            _teachers.Remove(teacher);
-        }
+        if (entity == null)
+            return;
+
+        _context.Teachers.Remove(entity);
+        _context.SaveChanges();
     }
 }

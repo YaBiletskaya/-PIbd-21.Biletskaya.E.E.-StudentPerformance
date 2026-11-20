@@ -1,6 +1,7 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
-using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementations;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Forms;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,14 +17,16 @@ public class DependencyConfig
     {
         IUnityContainer container = new UnityContainer();
 
-        container.RegisterSingleton<IFacultyRepository, FacultyRepository>();
-        container.RegisterSingleton<IDepartmentRepository, DepartmentRepository>();
-        container.RegisterSingleton<ITeacherRepository, TeacherRepository>();
-        container.RegisterSingleton<IDisciplineRepository, DisciplineRepository>();
-        container.RegisterSingleton<IStudentRepository, StudentRepository>();
-        container.RegisterSingleton<ITeachingAssignmentRepository, TeachingAssignmentRepository>();
-        container.RegisterSingleton<IAcademicPerformanceRepository, AcademicPerformanceRepository>();
-        container.RegisterSingleton<ITeachingAssignmentDisciplineRepository, TeachingAssignmentDisciplineRepository>();
+        container.RegisterType<DataContext>();
+
+        container.RegisterType<IFacultyRepository, FacultyRepository>();
+        container.RegisterType<IDepartmentRepository, DepartmentRepository>();
+        container.RegisterType<ITeacherRepository, TeacherRepository>();
+        container.RegisterType<IDisciplineRepository, DisciplineRepository>();
+        container.RegisterType<IStudentRepository, StudentRepository>();
+        container.RegisterType<ITeachingAssignmentRepository, TeachingAssignmentRepository>();
+        container.RegisterType<IAcademicPerformanceRepository, AcademicPerformanceRepository>();
+        container.RegisterType<ITeachingAssignmentDisciplineRepository, TeachingAssignmentDisciplineRepository>();
 
         container.RegisterType<FacultyForm>();
         container.RegisterType<FacultyEditForm>();
@@ -42,6 +45,7 @@ public class DependencyConfig
         container.RegisterType<TeachingAssignmentDisciplineEditForm>();
         container.RegisterType<AcademicPerformanceForm>();
         container.RegisterType<AcademicPerformanceEditForm>();
+        
 
         return container;
     }

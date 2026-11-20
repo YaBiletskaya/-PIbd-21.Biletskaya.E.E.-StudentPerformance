@@ -1,4 +1,5 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,41 +11,43 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementation
 
 public class StudentRepository : IStudentRepository
 {
-    private readonly List<Student> _students = new();
+    private readonly DataContext _context;
+
+    public StudentRepository(DataContext context)
+    {
+        _context = context;
+    }
 
     public IEnumerable<Student> ReadAll()
     {
-        return _students;
+        return _context.Students.ToList();
     }
 
     public Student? ReadById(int id)
     {
-        return _students.FirstOrDefault(student => student.Id == id);
+        return _context.Students.FirstOrDefault(x => x.Id == id);
     }
 
     public void Create(Student entity)
     {
-        _students.Add(entity);
+        _context.Students.Add(entity);
+        _context.SaveChanges();
     }
 
     public void Update(Student entity)
     {
-        var student = ReadById(entity.Id);
-
-        if (student != null)
-        {
-            _students.Remove(student);
-            _students.Add(entity);
-        }
+        _context.Students.Update(entity);
+        _context.SaveChanges();
     }
 
     public void Delete(int id)
     {
-        var student = ReadById(id);
+        var entity = _context.Students.Find(id);
 
-        if (student != null)
-        {
-            _students.Remove(student);
-        }
+        if (entity == null)
+            return;
+
+        _context.Students.Remove(entity);
+        _context.SaveChanges();
     }
 }

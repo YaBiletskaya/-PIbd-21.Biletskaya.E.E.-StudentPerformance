@@ -1,4 +1,5 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,30 +11,38 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementation
 
 public class TeachingAssignmentDisciplineRepository : ITeachingAssignmentDisciplineRepository
 {
-    private readonly List<TeachingAssignmentDiscipline> _items = new();
+    private readonly DataContext _context;
+
+    public TeachingAssignmentDisciplineRepository(DataContext context)
+    {
+        _context = context;
+    }
 
     public IEnumerable<TeachingAssignmentDiscipline> ReadAll()
     {
-        return _items;
+        return _context.TeachingAssignmentDisciplines.ToList();
     }
 
     public TeachingAssignmentDiscipline? ReadById(int id)
     {
-        return _items.FirstOrDefault(item => item.Id == id);
+        return _context.TeachingAssignmentDisciplines
+            .FirstOrDefault(x => x.Id == id);
     }
 
     public void Create(TeachingAssignmentDiscipline entity)
     {
-        _items.Add(entity);
+        _context.TeachingAssignmentDisciplines.Add(entity);
+        _context.SaveChanges();
     }
 
     public void Delete(int id)
     {
-        TeachingAssignmentDiscipline? entity = ReadById(id);
+        var entity = _context.TeachingAssignmentDisciplines.Find(id);
 
-        if (entity != null)
-        {
-            _items.Remove(entity);
-        }
+        if (entity == null)
+            return;
+
+        _context.TeachingAssignmentDisciplines.Remove(entity);
+        _context.SaveChanges();
     }
 }

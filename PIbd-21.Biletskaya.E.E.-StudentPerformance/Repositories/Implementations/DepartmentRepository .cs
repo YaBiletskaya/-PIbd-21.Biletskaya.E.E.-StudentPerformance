@@ -1,4 +1,5 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,41 +11,43 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementation
 
 public class DepartmentRepository : IDepartmentRepository
 {
-    private readonly List<Department> _departments = new();
+    private readonly DataContext _context;
+
+    public DepartmentRepository(DataContext context)
+    {
+        _context = context;
+    }
 
     public IEnumerable<Department> ReadAll()
     {
-        return _departments;
+        return _context.Departments.ToList();
     }
 
     public Department? ReadById(int id)
     {
-        return _departments.FirstOrDefault(department => department.Id == id);
+        return _context.Departments.FirstOrDefault(x => x.Id == id);
     }
 
     public void Create(Department entity)
     {
-        _departments.Add(entity);
+        _context.Departments.Add(entity);
+        _context.SaveChanges();
     }
 
     public void Update(Department entity)
     {
-        var department = ReadById(entity.Id);
-
-        if (department != null)
-        {
-            _departments.Remove(department);
-            _departments.Add(entity);
-        }
+        _context.Departments.Update(entity);
+        _context.SaveChanges();
     }
 
     public void Delete(int id)
     {
-        var department = ReadById(id);
+        var entity = _context.Departments.Find(id);
 
-        if (department != null)
-        {
-            _departments.Remove(department);
-        }
+        if (entity == null)
+            return;
+
+        _context.Departments.Remove(entity);
+        _context.SaveChanges();
     }
 }

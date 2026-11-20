@@ -1,4 +1,5 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,41 +11,43 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories.Implementation
 
 public class DisciplineRepository : IDisciplineRepository
 {
-    private readonly List<Discipline> _disciplines = new();
+    private readonly DataContext _context;
+
+    public DisciplineRepository(DataContext context)
+    {
+        _context = context;
+    }
 
     public IEnumerable<Discipline> ReadAll()
     {
-        return _disciplines;
+        return _context.Disciplines.ToList();
     }
 
     public Discipline? ReadById(int id)
     {
-        return _disciplines.FirstOrDefault(discipline => discipline.Id == id);
+        return _context.Disciplines.FirstOrDefault(x => x.Id == id);
     }
 
     public void Create(Discipline entity)
     {
-        _disciplines.Add(entity);
+        _context.Disciplines.Add(entity);
+        _context.SaveChanges();
     }
 
     public void Update(Discipline entity)
     {
-        var discipline = ReadById(entity.Id);
-
-        if (discipline != null)
-        {
-            _disciplines.Remove(discipline);
-            _disciplines.Add(entity);
-        }
+        _context.Disciplines.Update(entity);
+        _context.SaveChanges();
     }
 
     public void Delete(int id)
     {
-        var discipline = ReadById(id);
+        var entity = _context.Disciplines.Find(id);
 
-        if (discipline != null)
-        {
-            _disciplines.Remove(discipline);
-        }
+        if (entity == null)
+            return;
+
+        _context.Disciplines.Remove(entity);
+        _context.SaveChanges();
     }
 }
