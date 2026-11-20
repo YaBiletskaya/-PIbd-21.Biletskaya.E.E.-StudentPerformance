@@ -1,0 +1,194 @@
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
+{
+    public partial class TeachingAssignmentDisciplineForm : Form
+    {
+        private readonly ITeachingAssignmentDisciplineRepository _repository;
+        private readonly ITeachingAssignmentRepository _assignmentRepository;
+        private readonly ITeacherRepository _teacherRepository;
+        private readonly IDepartmentRepository _departmentRepository;
+        private readonly IDisciplineRepository _disciplineRepository;
+
+        public TeachingAssignmentDisciplineForm(
+            ITeachingAssignmentDisciplineRepository repository,
+            ITeachingAssignmentRepository assignmentRepository,
+            ITeacherRepository teacherRepository,
+            IDepartmentRepository departmentRepository,
+            IDisciplineRepository disciplineRepository)
+        {
+            InitializeComponent();
+
+            _repository = repository;
+            _assignmentRepository = assignmentRepository;
+            _teacherRepository = teacherRepository;
+            _departmentRepository = departmentRepository;
+            _disciplineRepository = disciplineRepository;
+
+            buttonAdd.Click += buttonAdd_Click;
+            buttonDelete.Click += buttonDelete_Click;
+            buttonRefresh.Click += buttonRefresh_Click;
+            buttonClose.Click += buttonClose_Click;
+
+            LoadAssignmentDisciplines();
+        }
+
+        private void LoadAssignmentDisciplines()
+        {
+            dataGridViewAssignmentDisciplines.DataSource = null;
+
+            dataGridViewAssignmentDisciplines.DataSource =
+                _repository.ReadAll()
+                    .Select(item =>
+                    {
+                        TeachingAssignment? assignment =
+                            _assignmentRepository.ReadById(item.TeachingAssignmentId);
+
+                        Teacher? teacher = assignment == null
+                            ? null
+                            : _teacherRepository.ReadById(assignment.TeacherId);
+
+                        Department? department = assignment == null
+                            ? null
+                            : _departmentRepository.ReadById(assignment.DepartmentId);
+
+                        Discipline? discipline =
+                            _disciplineRepository.ReadById(item.DisciplineId);
+
+                        return new
+                        {
+                            item.Id,
+                            Teacher = teacher == null
+                                ? "Не указан"
+                                : $"{teacher.LastName} {teacher.FirstName}",
+                            Department = department?.Name ?? "Не указана",
+                            Discipline = discipline?.Name ?? "Не указана",
+                            item.Hours
+                        };
+                    })
+                    .ToList();
+
+            if (dataGridViewAssignmentDisciplines.Columns.Count > 0)
+            {
+                dataGridViewAssignmentDisciplines.Columns["Id"].HeaderText = "ID";
+                dataGridViewAssignmentDisciplines.Columns["Teacher"].HeaderText =
+                    "Преподаватель";
+                dataGridViewAssignmentDisciplines.Columns["Department"].HeaderText =
+                    "Кафедра";
+                dataGridViewAssignmentDisciplines.Columns["Discipline"].HeaderText =
+                    "Дисциплина";
+                dataGridViewAssignmentDisciplines.Columns["Hours"].HeaderText =
+                    "Количество часов";
+            }
+        }
+
+        private TeachingAssignmentDiscipline? GetSelectedItem()
+        {
+            if (dataGridViewAssignmentDisciplines.CurrentRow == null)
+                return null;
+
+            int id = Convert.ToInt32(
+                dataGridViewAssignmentDisciplines.CurrentRow.Cells["Id"].Value);
+
+            return _repository.ReadById(id);
+        }
+
+        private void buttonAdd_Click(object? sender, EventArgs e)
+        {
+            if (!_assignmentRepository.ReadAll().Any())
+            {
+                MessageBox.Show("Сначала создайте назначение преподавателя.");
+                return;
+            }
+
+            if (!_disciplineRepository.ReadAll().Any())
+            {
+                MessageBox.Show("Сначала добавьте дисциплину.");
+                return;
+            }
+
+            using TeachingAssignmentDisciplineEditForm editForm =
+                new TeachingAssignmentDisciplineEditForm(
+                    _assignmentRepository,
+                    _teacherRepository,
+                    _departmentRepository,
+                    _disciplineRepository);
+
+            if (editForm.ShowDialog(this) == DialogResult.OK &&
+                editForm.AssignmentDiscipline != null)
+            {
+                var newItem = editForm.AssignmentDiscipline;
+
+                bool alreadyExists = _repository.ReadAll().Any(item =>
+                    item.TeachingAssignmentId == newItem.TeachingAssignmentId &&
+                    item.DisciplineId == newItem.DisciplineId);
+
+                if (alreadyExists)
+                {
+                    MessageBox.Show(
+                        "Эта дисциплина уже закреплена за выбранным назначением.");
+                    return;
+                }
+
+                int id = _repository.ReadAll()
+                    .Select(item => item.Id)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1;
+
+                TeachingAssignmentDiscipline entity =
+                    TeachingAssignmentDiscipline.CreateEntity(
+                        id,
+                        newItem.TeachingAssignmentId,
+                        newItem.DisciplineId,
+                        newItem.Hours);
+
+                _repository.Create(entity);
+
+                LoadAssignmentDisciplines();
+            }
+        }
+
+        private void buttonDelete_Click(object? sender, EventArgs e)
+        {
+            TeachingAssignmentDiscipline? item = GetSelectedItem();
+
+            if (item == null)
+            {
+                MessageBox.Show("Выберите запись для удаления.");
+                return;
+            }
+
+            DialogResult result = MessageBox.Show(
+                "Удалить выбранную дисциплину из назначения?",
+                "Подтверждение удаления",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                _repository.Delete(item.Id);
+                LoadAssignmentDisciplines();
+            }
+        }
+
+        private void buttonRefresh_Click(object? sender, EventArgs e)
+        {
+            LoadAssignmentDisciplines();
+        }
+
+        private void buttonClose_Click(object? sender, EventArgs e)
+        {
+            Close();
+        }
+    }
+}

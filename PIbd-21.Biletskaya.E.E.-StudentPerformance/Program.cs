@@ -1,17 +1,20 @@
+﻿using Unity;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.DependencyInjection;
+
 namespace PIbd_21.Biletskaya.E.E._StudentPerformance
 {
     internal static class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
+
+            IUnityContainer container = DependencyConfig.CreateContainer();
+
+            container.RegisterType<MainForm>();
+
+            Application.Run(container.Resolve<MainForm>());
         }
     }
 }

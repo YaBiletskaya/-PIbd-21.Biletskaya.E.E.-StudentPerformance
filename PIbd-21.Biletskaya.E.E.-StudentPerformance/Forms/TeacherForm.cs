@@ -1,0 +1,151 @@
+﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
+{
+    public partial class TeacherForm : Form
+    {
+        private readonly ITeacherRepository _teacherRepository;
+
+        public TeacherForm(ITeacherRepository teacherRepository)
+        {
+            InitializeComponent();
+
+            _teacherRepository = teacherRepository;
+
+            buttonAdd.Click += buttonAdd_Click;
+            buttonEdit.Click += buttonEdit_Click;
+            buttonDelete.Click += buttonDelete_Click;
+            buttonRefresh.Click += buttonRefresh_Click;
+            buttonClose.Click += buttonClose_Click;
+
+            LoadTeachers();
+        }
+
+        private void LoadTeachers()
+        {
+            dataGridViewTeachers.DataSource = null;
+
+            dataGridViewTeachers.DataSource = _teacherRepository.ReadAll()
+                .Select(teacher => new
+                {
+                    teacher.Id,
+                    teacher.LastName,
+                    teacher.FirstName,
+                    teacher.MiddleName,
+                    teacher.AcademicDegree,
+                    Position = teacher.Position.ToString()
+                })
+                .ToList();
+
+            if (dataGridViewTeachers.Columns.Count > 0)
+            {
+                dataGridViewTeachers.Columns[nameof(Teacher.Id)].HeaderText = "ID";
+                dataGridViewTeachers.Columns[nameof(Teacher.LastName)].HeaderText = "Фамилия";
+                dataGridViewTeachers.Columns[nameof(Teacher.FirstName)].HeaderText = "Имя";
+                dataGridViewTeachers.Columns[nameof(Teacher.MiddleName)].HeaderText = "Отчество";
+                dataGridViewTeachers.Columns[nameof(Teacher.AcademicDegree)].HeaderText =
+                    "Учёная степень";
+                dataGridViewTeachers.Columns["Position"].HeaderText = "Должность";
+            }
+        }
+
+        private Teacher? GetSelectedTeacher()
+        {
+            if (dataGridViewTeachers.CurrentRow == null)
+                return null;
+
+            int id = Convert.ToInt32(
+                dataGridViewTeachers.CurrentRow.Cells[nameof(Teacher.Id)].Value);
+
+            return _teacherRepository.ReadById(id);
+        }
+
+        private void buttonAdd_Click(object? sender, EventArgs e)
+        {
+            using TeacherEditForm editForm = new TeacherEditForm();
+
+            if (editForm.ShowDialog(this) == DialogResult.OK &&
+                editForm.Teacher != null)
+            {
+                int id = _teacherRepository.ReadAll()
+                    .Select(item => item.Id)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1;
+
+                Teacher teacher = Teacher.CreateEntity(
+                    id,
+                    editForm.Teacher.FirstName,
+                    editForm.Teacher.LastName,
+                    editForm.Teacher.MiddleName,
+                    editForm.Teacher.AcademicDegree,
+                    editForm.Teacher.Position);
+
+                _teacherRepository.Create(teacher);
+                LoadTeachers();
+            }
+        }
+
+        private void buttonEdit_Click(object? sender, EventArgs e)
+        {
+            Teacher? teacher = GetSelectedTeacher();
+
+            if (teacher == null)
+            {
+                MessageBox.Show("Выберите преподавателя для изменения.");
+                return;
+            }
+
+            using TeacherEditForm editForm = new TeacherEditForm(teacher);
+
+            if (editForm.ShowDialog(this) == DialogResult.OK &&
+                editForm.Teacher != null)
+            {
+                _teacherRepository.Update(editForm.Teacher);
+                LoadTeachers();
+            }
+        }
+
+        private void buttonDelete_Click(object? sender, EventArgs e)
+        {
+            Teacher? teacher = GetSelectedTeacher();
+
+            if (teacher == null)
+            {
+                MessageBox.Show("Выберите преподавателя для удаления.");
+                return;
+            }
+
+            DialogResult result = MessageBox.Show(
+                $"Удалить преподавателя «{teacher.LastName} {teacher.FirstName}»?",
+                "Подтверждение удаления",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                _teacherRepository.Delete(teacher.Id);
+                LoadTeachers();
+            }
+        }
+
+        private void buttonRefresh_Click(object? sender, EventArgs e)
+        {
+            LoadTeachers();
+        }
+
+        private void buttonClose_Click(object? sender, EventArgs e)
+        {
+            Close();
+        }
+    }
+}
