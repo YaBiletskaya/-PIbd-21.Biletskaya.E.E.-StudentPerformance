@@ -1,5 +1,7 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using Microsoft.Extensions.Logging;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,13 +21,14 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
         private readonly ITeacherRepository _teacherRepository;
         private readonly IDepartmentRepository _departmentRepository;
         private readonly IDisciplineRepository _disciplineRepository;
+        private readonly ILogger _logger;
 
         public TeachingAssignmentDisciplineForm(
             ITeachingAssignmentDisciplineRepository repository,
             ITeachingAssignmentRepository assignmentRepository,
             ITeacherRepository teacherRepository,
             IDepartmentRepository departmentRepository,
-            IDisciplineRepository disciplineRepository)
+            IDisciplineRepository disciplineRepository, ILogger logger)
         {
             InitializeComponent();
 
@@ -34,6 +37,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             _teacherRepository = teacherRepository;
             _departmentRepository = departmentRepository;
             _disciplineRepository = disciplineRepository;
+            _logger = logger;
+            _logger.LogInformation("Открыта форма закрепления дисциплин за преподавателями");
 
             buttonAdd.Click += buttonAdd_Click;
             buttonDelete.Click += buttonDelete_Click;
@@ -45,6 +50,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void LoadAssignmentDisciplines()
         {
+            _logger.LogInformation("Загрузка списка закрепленных дисциплин");
+
             dataGridViewAssignmentDisciplines.DataSource = null;
 
             dataGridViewAssignmentDisciplines.DataSource =
@@ -105,6 +112,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonAdd_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал закрепление дисциплины за назначением");
+
             if (!_assignmentRepository.ReadAll().Any())
             {
                 MessageBox.Show("Сначала создайте назначение преподавателя.");
@@ -153,13 +162,19 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                         newItem.Hours);
 
                 _repository.Create(entity);
-
+                _logger.LogInformation(
+                "Дисциплина закреплена за назначением. ID записи: {Id}, ID назначения: {AssignmentId}, ID дисциплины: {DisciplineId}",
+                entity.Id,
+                entity.TeachingAssignmentId,
+                entity.DisciplineId);
                 LoadAssignmentDisciplines();
             }
         }
 
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал удаление закрепленной дисциплины");
+
             TeachingAssignmentDiscipline? item = GetSelectedItem();
 
             if (item == null)
@@ -177,17 +192,22 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             if (result == DialogResult.Yes)
             {
                 _repository.Delete(item.Id);
+                _logger.LogInformation(
+                "Удалена запись о закреплении дисциплины. ID: {Id}",
+                item.Id);
                 LoadAssignmentDisciplines();
             }
         }
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Обновление списка закрепленных дисциплин");
             LoadAssignmentDisciplines();
         }
 
         private void buttonClose_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Закрыта форма закрепления дисциплин");
             Close();
         }
     }

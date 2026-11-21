@@ -1,5 +1,7 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using Microsoft.Extensions.Logging;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,12 +17,15 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
     public partial class DisciplineForm : Form
     {
         private readonly IDisciplineRepository _disciplineRepository;
+        private readonly ILogger _logger;
 
-        public DisciplineForm(IDisciplineRepository disciplineRepository)
+        public DisciplineForm(IDisciplineRepository disciplineRepository, ILogger logger)
         {
             InitializeComponent();
 
             _disciplineRepository = disciplineRepository;
+            _logger = logger;
+            _logger.LogInformation("Открыта форма управления дисциплинами");
 
             buttonAdd.Click += buttonAdd_Click;
             buttonEdit.Click += buttonEdit_Click;
@@ -33,6 +38,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void LoadDisciplines()
         {
+            _logger.LogInformation("Загрузка списка дисциплин");
+
             dataGridViewDisciplines.DataSource = null;
 
             dataGridViewDisciplines.DataSource =
@@ -71,6 +78,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonAdd_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал добавление дисциплины");
+
             using DisciplineEditForm editForm = new DisciplineEditForm();
 
             if (editForm.ShowDialog(this) == DialogResult.OK &&
@@ -88,6 +97,10 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                     editForm.Discipline.Credits);
 
                 _disciplineRepository.Create(discipline);
+                _logger.LogInformation(
+                "Добавлена дисциплина. ID: {DisciplineId}, название: {DisciplineName}",
+                discipline.Id,
+                discipline.Name);
 
                 LoadDisciplines();
             }
@@ -95,6 +108,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonEdit_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал изменение дисциплины");
+
             Discipline? discipline = GetSelectedDiscipline();
 
             if (discipline == null)
@@ -110,12 +125,18 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 editForm.Discipline != null)
             {
                 _disciplineRepository.Update(editForm.Discipline);
+                _logger.LogInformation(
+                "Изменена дисциплина. ID: {DisciplineId}, название: {DisciplineName}",
+                editForm.Discipline.Id,
+                editForm.Discipline.Name);
                 LoadDisciplines();
             }
         }
 
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал удаление дисциплины");
+
             Discipline? discipline = GetSelectedDiscipline();
 
             if (discipline == null)
@@ -133,17 +154,23 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             if (result == DialogResult.Yes)
             {
                 _disciplineRepository.Delete(discipline.Id);
+                _logger.LogInformation(
+                "Удалена дисциплина. ID: {DisciplineId}, название: {DisciplineName}",
+                discipline.Id,
+                discipline.Name);
                 LoadDisciplines();
             }
         }
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Обновление списка дисциплин"); 
             LoadDisciplines();
         }
 
         private void buttonClose_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Закрыта форма управления дисциплинами"); 
             Close();
         }
     }

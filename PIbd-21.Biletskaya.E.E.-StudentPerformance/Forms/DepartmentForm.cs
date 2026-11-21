@@ -1,5 +1,7 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using Microsoft.Extensions.Logging;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,15 +18,18 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
     {
         private readonly IDepartmentRepository _departmentRepository;
         private readonly IFacultyRepository _facultyRepository;
+        private readonly ILogger _logger;
 
         public DepartmentForm(
             IDepartmentRepository departmentRepository,
-            IFacultyRepository facultyRepository)
+            IFacultyRepository facultyRepository, ILogger logger)
         {
             InitializeComponent();
 
             _departmentRepository = departmentRepository;
             _facultyRepository = facultyRepository;
+            _logger = logger;
+            _logger.LogInformation("Открыта форма управления кафедрами");
 
             buttonAdd.Click += buttonAdd_Click;
             buttonEdit.Click += buttonEdit_Click;
@@ -37,6 +42,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void LoadDepartments()
         {
+            _logger.LogInformation("Загрузка списка кафедр");
+
             dataGridViewDepartments.DataSource = null;
 
             dataGridViewDepartments.DataSource =
@@ -77,6 +84,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonAdd_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал добавление кафедры");
+
             if (!_facultyRepository.ReadAll().Any())
             {
                 MessageBox.Show("Сначала добавьте факультет.");
@@ -101,12 +110,18 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                     editForm.Department.HeadFullName);
 
                 _departmentRepository.Create(department);
+                _logger.LogInformation(
+                "Добавлена кафедра. ID: {DepartmentId}, название: {DepartmentName}",
+                department.Id,
+                department.Name);
                 LoadDepartments();
             }
         }
 
         private void buttonEdit_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал изменение кафедры");
+
             Department? department = GetSelectedDepartment();
 
             if (department == null)
@@ -122,12 +137,18 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 editForm.Department != null)
             {
                 _departmentRepository.Update(editForm.Department);
+                _logger.LogInformation(
+                "Изменена кафедра. ID: {DepartmentId}, название: {DepartmentName}",
+                editForm.Department.Id,
+                editForm.Department.Name);
                 LoadDepartments();
             }
         }
 
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал удаление кафедры");
+
             Department? department = GetSelectedDepartment();
 
             if (department == null)
@@ -145,17 +166,23 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             if (result == DialogResult.Yes)
             {
                 _departmentRepository.Delete(department.Id);
+                _logger.LogInformation(
+                "Удалена кафедра. ID: {DepartmentId}, название: {DepartmentName}",
+                department.Id,
+                department.Name);
                 LoadDepartments();
             }
         }
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Обновление списка кафедр");
             LoadDepartments();
         }
 
         private void buttonClose_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Закрыта форма управления кафедрами"); 
             Close();
         }
     }

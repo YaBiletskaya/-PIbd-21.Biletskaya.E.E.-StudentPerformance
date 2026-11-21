@@ -1,6 +1,8 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using Microsoft.Extensions.Logging;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities.Enums;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,12 +18,15 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
     public partial class TeacherForm : Form
     {
         private readonly ITeacherRepository _teacherRepository;
+        private readonly ILogger _logger;
 
-        public TeacherForm(ITeacherRepository teacherRepository)
+        public TeacherForm(ITeacherRepository teacherRepository, ILogger logger)
         {
             InitializeComponent();
 
             _teacherRepository = teacherRepository;
+            _logger = logger;
+            _logger.LogInformation("Открыта форма управления преподавателями");
 
             buttonAdd.Click += buttonAdd_Click;
             buttonEdit.Click += buttonEdit_Click;
@@ -34,6 +39,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void LoadTeachers()
         {
+            _logger.LogInformation("Загрузка списка преподавателей");
+
             dataGridViewTeachers.DataSource = null;
 
             dataGridViewTeachers.DataSource = _teacherRepository.ReadAll()
@@ -88,6 +95,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonAdd_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал добавление преподавателя");
+
             using TeacherEditForm editForm = new TeacherEditForm();
 
             if (editForm.ShowDialog(this) == DialogResult.OK &&
@@ -107,12 +116,19 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                     editForm.Teacher.Position);
 
                 _teacherRepository.Create(teacher);
+                _logger.LogInformation(
+                "Добавлен преподаватель. ID: {TeacherId}, ФИО: {LastName} {FirstName}",
+                teacher.Id,
+                teacher.LastName,
+                teacher.FirstName);
                 LoadTeachers();
             }
         }
 
         private void buttonEdit_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал изменение данных преподавателя");
+
             Teacher? teacher = GetSelectedTeacher();
 
             if (teacher == null)
@@ -127,12 +143,17 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 editForm.Teacher != null)
             {
                 _teacherRepository.Update(editForm.Teacher);
+                _logger.LogInformation(
+                "Изменены данные преподавателя. ID: {TeacherId}",
+                editForm.Teacher.Id);
                 LoadTeachers();
             }
         }
 
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал удаление преподавателя");
+
             Teacher? teacher = GetSelectedTeacher();
 
             if (teacher == null)
@@ -150,17 +171,24 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             if (result == DialogResult.Yes)
             {
                 _teacherRepository.Delete(teacher.Id);
+                _logger.LogInformation(
+                "Удален преподаватель. ID: {TeacherId}, ФИО: {LastName} {FirstName}",
+                teacher.Id,
+                teacher.LastName,
+                teacher.FirstName);
                 LoadTeachers();
             }
         }
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Обновление списка преподавателей");
             LoadTeachers();
         }
 
         private void buttonClose_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Закрыта форма управления преподавателями");
             Close();
         }
     }
