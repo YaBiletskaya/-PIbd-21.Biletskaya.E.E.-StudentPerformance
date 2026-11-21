@@ -1,15 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
+using Microsoft.EntityFrameworkCore;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
 
 public class DataContext : DbContext
 {
+    public DataContext(DbContextOptions<DataContext> options)
+        : base(options)
+    {
+    }
+
     public DbSet<Faculty> Faculties => Set<Faculty>();
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Teacher> Teachers => Set<Teacher>();
@@ -20,15 +21,6 @@ public class DataContext : DbContext
         => Set<TeachingAssignmentDiscipline>();
     public DbSet<AcademicPerformance> AcademicPerformances
         => Set<AcademicPerformance>();
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseNpgsql(
-                "Host=localhost;Port=5432;Database=StudentPerformanceDb;Username=postgres;Password=eliza.b07");
-        }
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -89,7 +81,8 @@ public class DataContext : DbContext
         modelBuilder.Entity<TeachingAssignment>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.AssignmentDate).HasColumnType("timestamp without time zone");
+            entity.Property(x => x.AssignmentDate)
+                .HasColumnType("timestamp without time zone");
 
             entity.HasOne<Teacher>()
                 .WithMany()
@@ -122,7 +115,8 @@ public class DataContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.AcademicYear).IsRequired();
             entity.Property(x => x.Options).HasConversion<int>();
-            entity.Property(x => x.AssessmentDate).HasColumnType("timestamp without time zone");
+            entity.Property(x => x.AssessmentDate)
+                .HasColumnType("timestamp without time zone");
 
             entity.HasOne<Student>()
                 .WithMany()

@@ -1,10 +1,12 @@
 ﻿
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using Unity;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Data;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.DependencyInjection;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Forms;
+using Serilog;
+using Unity;
 
 namespace PIbd_21.Biletskaya.E.E._StudentPerformance
 {
@@ -33,6 +35,19 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance
                 Microsoft.Extensions.Logging.ILogger appLogger = loggerFactory.CreateLogger("StudentPerformance");
 
                 IUnityContainer container = DependencyConfig.CreateContainer();
+
+                string connectionString =
+                    configuration.GetConnectionString("DefaultConnection")
+                    ?? throw new InvalidOperationException(
+                        "Строка подключения DefaultConnection не найдена в appsettings.json.");
+
+                DbContextOptions<DataContext> dbOptions =
+                    new DbContextOptionsBuilder<DataContext>()
+                        .UseNpgsql(connectionString)
+                        .UseLoggerFactory(loggerFactory)
+                        .Options;
+
+                container.RegisterInstance<DbContextOptions<DataContext>>(dbOptions);
 
                 container.RegisterInstance<Microsoft.Extensions.Logging.ILogger>(appLogger);
 
