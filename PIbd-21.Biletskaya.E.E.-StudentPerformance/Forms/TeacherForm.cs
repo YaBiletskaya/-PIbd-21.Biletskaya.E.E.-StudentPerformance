@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities.Enums;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
@@ -150,6 +151,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             }
         }
 
+
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
             _logger.LogInformation("Пользователь начал удаление преподавателя");
@@ -168,17 +170,55 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
                 _teacherRepository.Delete(teacher.Id);
+
                 _logger.LogInformation(
-                "Удален преподаватель. ID: {TeacherId}, ФИО: {LastName} {FirstName}",
-                teacher.Id,
-                teacher.LastName,
-                teacher.FirstName);
+                    "Удален преподаватель. ID: {TeacherId}, ФИО: {LastName} {FirstName}",
+                    teacher.Id,
+                    teacher.LastName,
+                    teacher.FirstName);
+
+                MessageBox.Show(
+                    "Преподаватель успешно удален.",
+                    "Информация",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadTeachers();
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Невозможно удалить преподавателя. ID: {TeacherId}: существуют связанные записи",
+                    teacher.Id);
+
+                MessageBox.Show(
+                    "Невозможно удалить преподавателя, так как с ним связаны учебные назначения.",
+                    "Удаление невозможно",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при удалении преподавателя. ID: {TeacherId}",
+                    teacher.Id);
+
+                MessageBox.Show(
+                    "Произошла ошибка при удалении преподавателя.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
+
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {

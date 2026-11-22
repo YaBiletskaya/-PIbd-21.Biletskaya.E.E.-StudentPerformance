@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
 using Serilog.Core;
@@ -145,6 +146,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             }
         }
 
+
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
             _logger.LogInformation("Пользователь начал удаление кафедры");
@@ -163,16 +165,54 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
                 _departmentRepository.Delete(department.Id);
+
                 _logger.LogInformation(
-                "Удалена кафедра. ID: {DepartmentId}, название: {DepartmentName}",
-                department.Id,
-                department.Name);
+                    "Удалена кафедра. ID: {DepartmentId}, название: {DepartmentName}",
+                    department.Id,
+                    department.Name);
+
+                MessageBox.Show(
+                    "Кафедра успешно удалена.",
+                    "Информация",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadDepartments();
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Невозможно удалить кафедру. ID: {DepartmentId}: существуют связанные записи",
+                    department.Id);
+
+                MessageBox.Show(
+                    "Невозможно удалить кафедру, так как с ней связаны студенты или учебные назначения.",
+                    "Удаление невозможно",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при удалении кафедры. ID: {DepartmentId}",
+                    department.Id);
+
+                MessageBox.Show(
+                    "Произошла ошибка при удалении кафедры.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
+
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {

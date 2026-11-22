@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities.Enums;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
@@ -201,6 +202,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             }
         }
 
+
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
             _logger.LogInformation("Пользователь начал удаление оценки");
@@ -218,19 +220,57 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             int id = Convert.ToInt32(
                 dataGridViewPerformance.SelectedRows[0].Cells["Id"].Value);
 
-            var result = MessageBox.Show(
+            DialogResult result = MessageBox.Show(
                 "Вы действительно хотите удалить выбранную оценку?",
                 "Подтверждение удаления",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
                 _performanceRepository.Delete(id);
+
                 _logger.LogInformation("Удалена оценка. ID: {PerformanceId}", id);
+
+                MessageBox.Show(
+                    "Оценка успешно удалена.",
+                    "Информация",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadPerformance();
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка базы данных при удалении оценки. ID: {PerformanceId}",
+                    id);
+
+                MessageBox.Show(
+                    "Не удалось удалить оценку из базы данных.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при удалении оценки. ID: {PerformanceId}",
+                    id);
+
+                MessageBox.Show(
+                    "Произошла ошибка при удалении оценки.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
+
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {

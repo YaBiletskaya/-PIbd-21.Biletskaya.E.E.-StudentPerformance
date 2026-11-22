@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
 using Serilog.Core;
@@ -167,6 +168,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             }
         }
 
+
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
             _logger.LogInformation("Пользователь начал удаление студента");
@@ -185,17 +187,55 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
                 _studentRepository.Delete(student.Id);
+
                 _logger.LogInformation(
-                "Удален студент. ID: {StudentId}, ФИО: {LastName} {FirstName}",
-                student.Id,
-                student.LastName,
-                student.FirstName);
+                    "Удален студент. ID: {StudentId}, ФИО: {LastName} {FirstName}",
+                    student.Id,
+                    student.LastName,
+                    student.FirstName);
+
+                MessageBox.Show(
+                    "Студент успешно удален.",
+                    "Информация",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadStudents();
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Невозможно удалить студента. ID: {StudentId}: существуют связанные записи",
+                    student.Id);
+
+                MessageBox.Show(
+                    "Невозможно удалить студента, так как с ним связаны записи об успеваемости.",
+                    "Удаление невозможно",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при удалении студента. ID: {StudentId}",
+                    student.Id);
+
+                MessageBox.Show(
+                    "Произошла ошибка при удалении студента.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
+
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {

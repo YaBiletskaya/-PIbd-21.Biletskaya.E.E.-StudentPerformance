@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
 using Serilog.Core;
@@ -133,6 +134,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             }
         }
 
+
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
             _logger.LogInformation("Пользователь начал удаление дисциплины");
@@ -151,16 +153,54 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
                 _disciplineRepository.Delete(discipline.Id);
+
                 _logger.LogInformation(
-                "Удалена дисциплина. ID: {DisciplineId}, название: {DisciplineName}",
-                discipline.Id,
-                discipline.Name);
+                    "Удалена дисциплина. ID: {DisciplineId}, название: {DisciplineName}",
+                    discipline.Id,
+                    discipline.Name);
+
+                MessageBox.Show(
+                    "Дисциплина успешно удалена.",
+                    "Информация",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadDisciplines();
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Невозможно удалить дисциплину. ID: {DisciplineId}: существуют связанные записи",
+                    discipline.Id);
+
+                MessageBox.Show(
+                    "Невозможно удалить дисциплину, так как она закреплена за учебными назначениями или по ней выставлены оценки.",
+                    "Удаление невозможно",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при удалении дисциплины. ID: {DisciplineId}",
+                    discipline.Id);
+
+                MessageBox.Show(
+                    "Произошла ошибка при удалении дисциплины.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
+
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
