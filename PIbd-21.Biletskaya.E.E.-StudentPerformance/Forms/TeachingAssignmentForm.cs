@@ -1,5 +1,7 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using Microsoft.Extensions.Logging;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,17 +19,20 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
         private readonly ITeachingAssignmentRepository _assignmentRepository;
         private readonly ITeacherRepository _teacherRepository;
         private readonly IDepartmentRepository _departmentRepository;
+        private readonly ILogger _logger;
 
         public TeachingAssignmentForm(
             ITeachingAssignmentRepository assignmentRepository,
             ITeacherRepository teacherRepository,
-            IDepartmentRepository departmentRepository)
+            IDepartmentRepository departmentRepository, ILogger logger)
         {
             InitializeComponent();
 
             _assignmentRepository = assignmentRepository;
             _teacherRepository = teacherRepository;
             _departmentRepository = departmentRepository;
+            _logger = logger;
+            _logger.LogInformation("Открыта форма назначений преподавателей");
 
             buttonAdd.Click += buttonAdd_Click;
             buttonDelete.Click += buttonDelete_Click;
@@ -39,6 +44,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void LoadAssignments()
         {
+            _logger.LogInformation("Загрузка списка назначений преподавателей");
+
             dataGridViewAssignments.DataSource = null;
 
             dataGridViewAssignments.DataSource =
@@ -83,6 +90,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonAdd_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал создание назначения преподавателя");
+
             if (!_teacherRepository.ReadAll().Any())
             {
                 MessageBox.Show("Сначала добавьте преподавателя.");
@@ -115,13 +124,19 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                     editForm.Assignment.AssignmentDate);
 
                 _assignmentRepository.Create(assignment);
-
+                _logger.LogInformation(
+                "Создано назначение преподавателя. ID: {AssignmentId}, ID преподавателя: {TeacherId}, ID кафедры: {DepartmentId}",
+                assignment.Id,
+                assignment.TeacherId,
+                assignment.DepartmentId);
                 LoadAssignments();
             }
         }
 
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал удаление назначения преподавателя");
+
             TeachingAssignment? assignment = GetSelectedAssignment();
 
             if (assignment == null)
@@ -139,17 +154,22 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             if (result == DialogResult.Yes)
             {
                 _assignmentRepository.Delete(assignment.Id);
+                _logger.LogInformation(
+                "Удалено назначение преподавателя. ID: {AssignmentId}",
+                assignment.Id);
                 LoadAssignments();
             }
         }
 
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Обновление списка назначений преподавателей");
             LoadAssignments();
         }
 
         private void buttonClose_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Закрыта форма назначений преподавателей");
             Close();
         }
     }

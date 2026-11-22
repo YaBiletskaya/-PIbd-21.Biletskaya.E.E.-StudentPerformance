@@ -1,5 +1,8 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,15 +19,18 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
     {
         private readonly IStudentRepository _studentRepository;
         private readonly IDepartmentRepository _departmentRepository;
+        private readonly ILogger _logger;
 
         public StudentForm(
             IStudentRepository studentRepository,
-            IDepartmentRepository departmentRepository)
+            IDepartmentRepository departmentRepository, ILogger logger)
         {
             InitializeComponent();
 
             _studentRepository = studentRepository;
             _departmentRepository = departmentRepository;
+            _logger = logger;
+            _logger.LogInformation("Открыта форма управления студентами");
 
             buttonAdd.Click += buttonAdd_Click;
             buttonEdit.Click += buttonEdit_Click;
@@ -37,6 +43,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void LoadStudents()
         {
+            _logger.LogInformation("Загрузка списка студентов");
+
             dataGridViewStudents.DataSource = null;
 
             dataGridViewStudents.DataSource =
@@ -93,6 +101,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonAdd_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал добавление студента");
+
             if (!_departmentRepository.ReadAll().Any())
             {
                 MessageBox.Show("Сначала добавьте кафедру.");
@@ -123,13 +133,19 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                     editForm.Student.AdmissionYear);
 
                 _studentRepository.Create(student);
-
+                _logger.LogInformation(
+                "Добавлен студент. ID: {StudentId}, ФИО: {LastName} {FirstName}",
+                student.Id,
+                student.LastName,
+                student.FirstName);
                 LoadStudents();
             }
         }
 
         private void buttonEdit_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал изменение данных студента");
+
             Student? student = GetSelectedStudent();
 
             if (student == null)
@@ -145,12 +161,18 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 editForm.Student != null)
             {
                 _studentRepository.Update(editForm.Student);
+                _logger.LogInformation(
+                "Изменены данные студента. ID: {StudentId}",
+                editForm.Student.Id);
                 LoadStudents();
             }
         }
 
+
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал удаление студента");
+
             Student? student = GetSelectedStudent();
 
             if (student == null)
@@ -165,20 +187,65 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
                 _studentRepository.Delete(student.Id);
+
+                _logger.LogInformation(
+                    "Удален студент. ID: {StudentId}, ФИО: {LastName} {FirstName}",
+                    student.Id,
+                    student.LastName,
+                    student.FirstName);
+
+                MessageBox.Show(
+                    "Студент успешно удален.",
+                    "Информация",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadStudents();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Невозможно удалить студента. ID: {StudentId}: существуют связанные записи",
+                    student.Id);
+
+                MessageBox.Show(
+                    "Невозможно удалить студента, так как с ним связаны записи об успеваемости.",
+                    "Удаление невозможно",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при удалении студента. ID: {StudentId}",
+                    student.Id);
+
+                MessageBox.Show(
+                    "Произошла ошибка при удалении студента.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
+
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Обновление списка студентов");
             LoadStudents();
         }
 
         private void buttonClose_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Закрыта форма управления студентами");
             Close();
         }
     }

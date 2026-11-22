@@ -1,6 +1,9 @@
-﻿using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Entities.Enums;
 using PIbd_21.Biletskaya.E.E._StudentPerformance.Repositories;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -21,6 +24,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
         private readonly ITeachingAssignmentRepository _assignmentRepository;
         private readonly ITeacherRepository _teacherRepository;
         private readonly IDisciplineRepository _disciplineRepository;
+        private readonly ILogger _logger;
 
         public AcademicPerformanceForm(
             IAcademicPerformanceRepository performanceRepository,
@@ -28,7 +32,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             ITeachingAssignmentDisciplineRepository assignmentDisciplineRepository,
             ITeachingAssignmentRepository assignmentRepository,
             ITeacherRepository teacherRepository,
-            IDisciplineRepository disciplineRepository)
+            IDisciplineRepository disciplineRepository, ILogger logger)
         {
             InitializeComponent();
 
@@ -38,6 +42,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             _assignmentRepository = assignmentRepository;
             _teacherRepository = teacherRepository;
             _disciplineRepository = disciplineRepository;
+            _logger = logger;
+            _logger.LogInformation("Открыта форма учета успеваемости");
 
             ConfigureGrid();
 
@@ -87,6 +93,7 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
         private void LoadPerformance()
         {
             dataGridViewPerformance.Rows.Clear();
+            _logger.LogInformation("Загрузка списка успеваемости");
 
             var students = _studentRepository.ReadAll().ToList();
             var assignmentDisciplines =
@@ -167,6 +174,8 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
 
         private void buttonAdd_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал добавление оценки");
+
             int newId = _performanceRepository.ReadAll()
                 .Select(x => x.Id)
                 .DefaultIfEmpty(0)
@@ -185,12 +194,19 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
                 editForm.Performance != null)
             {
                 _performanceRepository.Create(editForm.Performance);
+                _logger.LogInformation(
+                "Добавлена оценка. ID: {PerformanceId}, студент: {StudentId}",
+                editForm.Performance.Id,
+                editForm.Performance.StudentId);
                 LoadPerformance();
             }
         }
 
+
         private void buttonDelete_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Пользователь начал удаление оценки");
+
             if (dataGridViewPerformance.SelectedRows.Count == 0)
             {
                 MessageBox.Show(
@@ -204,26 +220,67 @@ namespace PIbd_21.Biletskaya.E.E._StudentPerformance.Forms
             int id = Convert.ToInt32(
                 dataGridViewPerformance.SelectedRows[0].Cells["Id"].Value);
 
-            var result = MessageBox.Show(
+            DialogResult result = MessageBox.Show(
                 "Вы действительно хотите удалить выбранную оценку?",
                 "Подтверждение удаления",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
                 _performanceRepository.Delete(id);
+
+                _logger.LogInformation("Удалена оценка. ID: {PerformanceId}", id);
+
+                MessageBox.Show(
+                    "Оценка успешно удалена.",
+                    "Информация",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadPerformance();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка базы данных при удалении оценки. ID: {PerformanceId}",
+                    id);
+
+                MessageBox.Show(
+                    "Не удалось удалить оценку из базы данных.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при удалении оценки. ID: {PerformanceId}",
+                    id);
+
+                MessageBox.Show(
+                    "Произошла ошибка при удалении оценки.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
+
         private void buttonRefresh_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Обновление списка успеваемости");
             LoadPerformance();
         }
 
         private void buttonClose_Click(object? sender, EventArgs e)
         {
+            _logger.LogInformation("Закрыта форма учета успеваемости"); 
             Close();
         }
     }
